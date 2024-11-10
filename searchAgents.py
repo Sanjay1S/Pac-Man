@@ -358,29 +358,6 @@ class CornersProblem(search.SearchProblem):
             # Increase the expanded counter as required by the assignment
             self._expanded += 1  # DO NOT CHANGE
             return successors
-        
-        ## OLD WORKING CODE - SUMUKH's
-
-        #     x, y = position
-        #     dx, dy = Actions.directionToVector(action)
-        #     nextx, nexty = int(x + dx), int(y + dy)
-
-        #     # if you're move is not blocked by a wall, proceed otherwise don't proceed
-            
-        #     if not self.walls[nextx][nexty]:
-        #         nxt_pos = (nextx, nexty)
-        #         # create an updated list of remaining corners, excluding any corner that is already visited
-        #         new_corners_arr = []
-        #         for corner in remaining_corners:
-        #             if corner != nxt_pos:
-        #                 new_corners_arr.append(corner)
-        #         new_corners = tuple(new_corners_arr)
-
-        #         # add new successor state now
-        #         successors.append(((nxt_pos, new_corners), action, 1))
-
-        # self._expanded += 1  # DO NOT CHANGE
-        # return successors
     
     def getCostOfActions(self, actions):
         """
@@ -409,74 +386,23 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible.
     """
-    # corners = problem.corners  # These are the corner coordinates
-    # walls = problem.walls      # These are the walls of the maze, as a Grid (game.py)
+    corners = problem.corners  # These are the corner coordinates
+    walls = problem.walls      # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
     current_position, remaining_corners = state
-    corners = problem.corners  # The corners to visit
-    walls = problem.walls      # The walls of the maze (not directly used here)
-
+    
     # If all corners are visited, heuristic is zero (goal state).
     if not remaining_corners:
         return 0
 
-    # BFS-based heuristic using Manhattan distances through remaining corners
-    total_distance = 0
-    unvisited_corners = list(remaining_corners)
-    current = current_position
-
-    # Greedy loop to estimate the minimum path through all remaining corners
-    while unvisited_corners:
-        # Find the closest corner from the current position
-        distances = [
-            (abs(current[0] - corner[0]) + abs(current[1] - corner[1]), corner)
-            for corner in unvisited_corners
-        ]
-        
-        # Choose the minimum distance and update for the next position
-        min_distance, closest_corner = min(distances)
-        total_distance += min_distance
-        current = closest_corner
-        
-        # Remove the closest corner from the list of unvisited corners
-        unvisited_corners.remove(closest_corner)
-
-    return total_distance
-
-    ## OLD WORKING CODED
-
-    # return the minimum distance to the nearest corner
-    # current_position, corners = state
-    # heuristic = 0
-    # unvisited_corners = list(corners)
-
-    # # Use a different strategy: prioritize visiting corners that are farthest first
-    # while unvisited_corners:
-    #     # Calculate Manhattan distance to each unvisited corner
-    #     distances = [
-    #         (util.manhattanDistance(current_position, corner), corner)
-    #         for corner in unvisited_corners
-    #     ]
-    #     # Select the farthest corner instead of the closest
-    #     max_distance, farthest_corner = max(distances)
-    #     heuristic += max_distance
-    #     current_position = farthest_corner
-    #     unvisited_corners.remove(farthest_corner)
-
-    # return heuristic
-    current_position, corners = state
-    heuristic = 0
-    unvisited_corners = list(corners)
-
-    while unvisited_corners:
-        distances = [(util.manhattanDistance(current_position, corner), corner) for corner in unvisited_corners]
-        min_distance, closest_corner = min(distances)
-        heuristic += min_distance
-        current_position = closest_corner
-        unvisited_corners.remove(closest_corner)
-
-    return heuristic
+    # Use Manhattan distance to the farthest corner as the heuristic
+    distances = [
+        abs(current_position[0] - corner[0]) + abs(current_position[1] - corner[1])
+        for corner in remaining_corners
+    ]
+    
+    return max(distances)
 
 
 class AStarCornersAgent(SearchAgent):
