@@ -299,7 +299,7 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        # returning starting position of PacMan and all 4 corners of the grid
+        # this is the start state of the pacman
         return (self.startingPosition, tuple(self.corners))
 
     def isGoalState(self, state: Any):
@@ -307,9 +307,9 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        # state is a tuple that unpacks into position and remaining-corners that PacMan has to traverse.
+        # we can get remaining_corners and position from the state typle
         position, remaining_corners = state
-        # returns True if the goal state is reached, else returns False and the problem continues executing.
+        # if this is false, the problem is not finished
         return len(remaining_corners) == 0
 
     def getSuccessors(self, state: Any):
@@ -339,23 +339,22 @@ class CornersProblem(search.SearchProblem):
             position, remaining_corners = state
             x, y = position
 
-            # Expand nodes in BFS style without optimization
+            # Expand nodes using BFS
             for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
                 # Determine new position based on the action
                 dx, dy = Actions.directionToVector(action)
                 nextx, nexty = int(x + dx), int(y + dy)
                 
-                # Check if the move is within bounds (not hitting a wall)
+                # Check if we are not hitting a wall
                 if not self.walls[nextx][nexty]:
                     nxt_pos = (nextx, nexty)
 
-                    # Copy remaining corners, and remove reached corners
+                    # remove all visited corners and add remaining ones here
                     new_corners = tuple(corner for corner in remaining_corners if corner != nxt_pos)
                     
-                    # Append this as a new successor state
+                    # this will be our new successor state
                     successors.append(((nxt_pos, new_corners), action, 1))
 
-            # Increase the expanded counter as required by the assignment
             self._expanded += 1  # DO NOT CHANGE
             return successors
     
@@ -392,11 +391,10 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     "*** YOUR CODE HERE ***"
     current_position, remaining_corners = state
     
-    # If all corners are visited, heuristic is zero (goal state).
+    # If all corners are visited, heuristic is zero i.e goal state.
     if not remaining_corners:
         return 0
-
-    # Use Manhattan distance to the farthest corner as the heuristic
+    # calculating the farthest point using the manhatten distance
     distances = [
         abs(current_position[0] - corner[0]) + abs(current_position[1] - corner[1])
         for corner in remaining_corners
