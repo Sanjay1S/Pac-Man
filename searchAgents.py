@@ -490,6 +490,68 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
+    foodList = foodGrid.asList()  # Convert food grid to a list of coordinates
+
+    if not foodList:
+        return 0  # No food left, heuristic is 0
+
+    # Calculate distances to each food dot using problem-specific mazeDistance
+    distances = [
+        mazeDistance(position, food, problem.startingGameState) for food in foodList
+    ]
+
+    # Return the maximum distance as the heuristic
+    return max(distances) if distances else 0
+
+
+def mazeDistance(point1, point2, gameState):
+    """
+    Returns the maze distance between any two points, using the built-in BFS algorithm.
+    """
+    from util import Queue
+    from game import Directions
+
+    # Get walls and initialize BFS
+    walls = gameState.getWalls()
+    visited = set()
+    queue = Queue()
+    queue.push((point1, 0))  # (position, distance)
+
+    while not queue.isEmpty():
+        current_position, current_distance = queue.pop()
+
+        if current_position == point2:
+            return current_distance
+
+        if current_position in visited:
+            continue
+
+        visited.add(current_position)
+
+        # Add neighbors to the queue
+        for direction in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+            x, y = current_position
+            dx, dy = Directions.DIRECTIONS[direction]
+            next_position = (x + dx, y + dy)
+
+            if not walls[next_position[0]][next_position[1]] and next_position not in visited:
+                queue.push((next_position, current_distance + 1))
+
+    # If the point is unreachable, return infinity (should not happen in a valid problem)
+    return float('inf')
+
+    ##WORKING
+    position, foodGrid = state  # Extract Pacman's position and the food grid
+    foodList = foodGrid.asList()  # Convert food grid to a list of coordinates
+
+    if not foodList:
+        return 0  # If no food is left, heuristic is 0
+
+    # Compute the Manhattan distances to all remaining food dots
+    distances = [util.manhattanDistance(position, food) for food in foodList]
+
+    # Return the maximum distance to the farthest dot
+    return max(distances)
 
     # return the minimum distance to the nearest food       
     return 0
@@ -524,6 +586,66 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
+        from util import Queue
+
+        # Create an AnyFoodSearchProblem for the current game state
+        problem = AnyFoodSearchProblem(gameState)
+
+        # BFS structures
+        frontier = Queue()  # Frontier stores (state, path to state)
+        explored = set()    # Explored set to avoid revisiting states
+
+        # Start with the initial state
+        startState = problem.getStartState()
+        frontier.push((startState, []))
+
+        while not frontier.isEmpty():
+            currentState, actions = frontier.pop()
+
+            # If this state is the goal, return the actions
+            if problem.isGoalState(currentState):
+                return actions
+
+            if currentState not in explored:
+                explored.add(currentState)
+
+                # Add successors to the frontier
+                for successor, action, stepCost in problem.getSuccessors(currentState):
+                    if successor not in explored:
+                        frontier.push((successor, actions + [action]))
+
+        return []  # No path found (should not happen in this problem)
+
+        problem = AnyFoodSearchProblem(gameState)
+
+        # Use a greedy search approach (BFS for the closest food dot)
+        from util import PriorityQueue
+
+        frontier = PriorityQueue()  # Priority queue for greedy behavior
+        explored = set()  # Track explored states
+        startState = problem.getStartState()
+
+        # Push the starting state with a priority based on the Manhattan distance
+        frontier.push((startState, []), 0)
+
+        while not frontier.isEmpty():
+            currentState, actions = frontier.pop()
+
+            # If this is the goal state, return the path
+            if problem.isGoalState(currentState):
+                return actions
+
+            if currentState not in explored:
+                explored.add(currentState)
+
+                # Add successors to the priority queue
+                for successor, action, stepCost in problem.getSuccessors(currentState):
+                    if successor not in explored:
+                        # Priority based on Manhattan distance to the goal
+                        priority = util.manhattanDistance(successor, problem.food.asList()[0])
+                        frontier.push((successor, actions + [action]), priority)
+
+        return []  # If no path is found (should not happen)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
